@@ -6,13 +6,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -27,8 +30,7 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
-                "Not Found"
-        );
+                "Not Found");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
@@ -40,8 +42,7 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.CONFLICT.value(),
                 ex.getMessage(),
-                "Conflict"
-        );
+                "Conflict");
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
@@ -52,13 +53,13 @@ public class GlobalExceptionHandler {
 
         String paramName = ex.getName();
         String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "đúng kiểu dữ liệu";
-        String message = String.format("Giá trị truyền vào cho tham số '%s' không hợp lệ. Vui lòng nhập kiểu %s.", paramName, requiredType);
+        String message = String.format("Giá trị truyền vào cho tham số '%s' không hợp lệ. Vui lòng nhập kiểu %s.",
+                paramName, requiredType);
 
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.BAD_REQUEST.value(),
                 message,
-                "Bad Request"
-        );
+                "Bad Request");
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -70,8 +71,19 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.BAD_REQUEST.value(),
                 "Dữ liệu gửi lên không hợp lệ hoặc sai định dạng JSON.",
-                "Bad Request"
-        );
+                "Bad Request");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        LOGGER.error("IllegalArgumentException: {}", ex.getMessage(), ex);
+
+        ApiResponse<Object> response = ApiResponse.ofError(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                "Bad Request");
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -87,14 +99,12 @@ public class GlobalExceptionHandler {
         String message = String.format(
                 "Phương thức %s không được hỗ trợ cho endpoint này. Các phương thức được hỗ trợ: %s.",
                 ex.getMethod(),
-                supportedMethods
-        );
+                supportedMethods);
 
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
                 message,
-                "Method Not Allowed"
-        );
+                "Method Not Allowed");
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
@@ -108,8 +118,7 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.NOT_FOUND.value(),
                 message,
-                "Not Found"
-        );
+                "Not Found");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
@@ -121,9 +130,27 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ApiResponse.ofError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
-                "Internal Server Error"
-        );
+                "Internal Server Error");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleValidationException(
+            MethodArgumentNotValidException ex) {
+
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(this::formatFieldError)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiResponse.badRequest("Dữ liệu không hợp lệ", errors));
+    }
+
+    private String formatFieldError(FieldError fieldError) {
+        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
+    }
+
 }

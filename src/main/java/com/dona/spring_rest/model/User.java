@@ -12,6 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users") // Map entity to users table in database
@@ -20,16 +24,23 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Use AUTO_INCREMENT primary key
     private Long id;
+    @NotBlank(message = "Tên không được để trống")
+    @Size(min = 2, max = 100, message = "Tên phải từ 2 đến 100 ký tự")
 
     private String name;
 
     @Column(unique = true, nullable = false) // Ensure email is unique and not null
     private String email;
 
+    @NotBlank(message = "Mật khẩu không được để trống")
+    @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
     private String password;
 
+    @Min(value = 1, message = "Tuổi phải lớn hơn 0")
+    @Max(value = 150, message = "Tuổi không hợp lệ")
     private Integer age;
 
+    @Size(max = 255, message = "Địa chỉ không được quá 255 ký tự")
     private String address;
 
     @Enumerated(EnumType.STRING) // Persist enum name as STRING in database

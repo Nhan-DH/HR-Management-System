@@ -1,9 +1,10 @@
 package com.dona.spring_rest.service;
 
+import com.dona.spring_rest.exception.DuplicateResourceException;
+import com.dona.spring_rest.exception.ResourceNotFoundException;
 import com.dona.spring_rest.model.User;
 import com.dona.spring_rest.repository.UserRepository;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,20 +21,30 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", id));
     }
 
     public User createUser(User user) {
+        validateEmail(user);
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new DuplicateResourceException("Người dùng", "email", user.getEmail());
+        }
+
         return userRepository.save(user);
     }
 
     public User updateUser(Long id, User user) {
-        Optional<User> existingUserOpt = userRepository.findById(id);
-        if (existingUserOpt.isEmpty()) {
-            return null;
+        validateEmail(user);
+
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", "id", id));
+
+        if (userRepository.existsByEmailAndIdNot(user.getEmail(), id)) {
+            throw new DuplicateResourceException("Người dùng", "email", user.getEmail());
         }
 
-        User existingUser = existingUserOpt.get();
         existingUser.setName(user.getName());
         existingUser.setEmail(user.getEmail());
         existingUser.setPassword(user.getPassword());
@@ -46,6 +57,16 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Người dùng", "id", id);
+        }
+
         userRepository.deleteById(id);
+    }
+
+    private void validateEmail(User user) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email không được để trống");
+        }
     }
 }
