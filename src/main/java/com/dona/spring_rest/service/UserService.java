@@ -5,15 +5,18 @@ import com.dona.spring_rest.exception.ResourceNotFoundException;
 import com.dona.spring_rest.model.User;
 import com.dona.spring_rest.repository.UserRepository;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers() {
@@ -32,6 +35,7 @@ public class UserService {
             throw new DuplicateResourceException("Người dùng", "email", user.getEmail());
         }
 
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
