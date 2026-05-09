@@ -1,12 +1,10 @@
-package com.dona.spring_rest.model.dto.response;
+package com.dona.spring_rest.feature.auth.dto;
 
 public class LoginResponse {
+
     private String accessToken;
     private String tokenType;
     private long expiresIn;
-
-    public LoginResponse() {
-    }
 
     public LoginResponse(String accessToken, String tokenType, long expiresIn) {
         this.accessToken = accessToken;

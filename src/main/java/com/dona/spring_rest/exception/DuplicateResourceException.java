@@ -1,6 +1,11 @@
 package com.dona.spring_rest.exception;
 
+import java.io.Serial;
+
 public class DuplicateResourceException extends RuntimeException {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private final String resourceName;
     private final String fieldName;

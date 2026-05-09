@@ -1,13 +1,6 @@
-package com.dona.spring_rest.controller;
-
-import com.dona.spring_rest.helper.ApiResponse;
-import com.dona.spring_rest.model.User;
-import com.dona.spring_rest.service.UserService;
+package com.dona.spring_rest.feature.user;
 
 import jakarta.validation.Valid;
-
-import java.net.URI;
-import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +8,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dona.spring_rest.dto.ApiResponse;
+
+import java.net.URI;
+import java.util.List;
+
 @RestController
-@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -28,34 +24,40 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping("/")
+    public ResponseEntity<String> getHomePage() {
+        return ResponseEntity.ok("Hello World");
+    }
+
+    @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
+        List<User> users = this.userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công", users));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/users/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
+        User user = this.userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công", user));
     }
 
-    @PostMapping
+    @PostMapping("/users")
     public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.created(URI.create("/users/" + createdUser.getId()))
-                .body(ApiResponse.created("Tạo người dùng thành công", createdUser));
+        User createdUser = this.userService.createUser(user);
+        URI location = URI.create("/users/" + createdUser.getId());
+        return ResponseEntity.created(location)
+                .body(ApiResponse.created("Tạo người dùng mới thành công", createdUser));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/users/{id}")
     public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Long id, @RequestBody User user) {
-        User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", updatedUser));
+        User updatedUser = this.userService.updateUser(id, user);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin người dùng thành công", updatedUser));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+        this.userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 }
