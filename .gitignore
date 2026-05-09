@@ -34,4 +34,5 @@ build/
 
 ### Documentation ###
 docs/
-.claude/
+.github/
+copilot-instructions.md

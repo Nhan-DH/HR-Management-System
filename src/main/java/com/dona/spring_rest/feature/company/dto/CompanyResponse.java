@@ -37,7 +37,6 @@ public class CompanyResponse {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

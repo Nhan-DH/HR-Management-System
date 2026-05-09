@@ -40,7 +40,6 @@ public class CompanyRequest {
 
     private String logo;
 
-    // Getters and Setters
     public String getName() {
         return name;
     }

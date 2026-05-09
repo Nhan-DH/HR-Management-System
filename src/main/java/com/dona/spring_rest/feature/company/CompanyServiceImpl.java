@@ -52,19 +52,16 @@ public class CompanyServiceImpl implements CompanyService {
     public Company updateCompany(Long id, Company companyDetails) {
         Company company = getCompanyById(id);
 
-        // Check for duplicate email if email is being updated
         if (!company.getEmail().equals(companyDetails.getEmail()) &&
                 companyRepository.existsByEmail(companyDetails.getEmail())) {
             throw new DuplicateResourceException("Email công ty đã tồn tại");
         }
 
-        // Check for duplicate tax code if tax code is being updated
         if (!company.getTaxCode().equals(companyDetails.getTaxCode()) &&
                 companyRepository.existsByTaxCode(companyDetails.getTaxCode())) {
             throw new DuplicateResourceException("Mã số thuế đã tồn tại");
         }
 
-        // Check for duplicate name if name is being updated
         if (!company.getName().equals(companyDetails.getName()) &&
                 companyRepository.existsByName(companyDetails.getName())) {
             throw new DuplicateResourceException("Tên công ty đã tồn tại");
