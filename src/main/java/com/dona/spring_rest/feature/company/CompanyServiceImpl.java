@@ -31,15 +31,15 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company createCompany(Company company) {
         if (companyRepository.existsByEmail(company.getEmail())) {
-            throw new DuplicateResourceException("Email công ty đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "email", company.getEmail());
         }
 
         if (companyRepository.existsByTaxCode(company.getTaxCode())) {
-            throw new DuplicateResourceException("Mã số thuế đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "taxCode", company.getTaxCode());
         }
 
         if (companyRepository.existsByName(company.getName())) {
-            throw new DuplicateResourceException("Tên công ty đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "name", company.getName());
         }
 
         company.setCreatedAt(Instant.now());
@@ -54,17 +54,17 @@ public class CompanyServiceImpl implements CompanyService {
 
         if (!company.getEmail().equals(companyDetails.getEmail()) &&
                 companyRepository.existsByEmail(companyDetails.getEmail())) {
-            throw new DuplicateResourceException("Email công ty đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "email", companyDetails.getEmail());
         }
 
         if (!company.getTaxCode().equals(companyDetails.getTaxCode()) &&
                 companyRepository.existsByTaxCode(companyDetails.getTaxCode())) {
-            throw new DuplicateResourceException("Mã số thuế đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "taxCode", companyDetails.getTaxCode());
         }
 
         if (!company.getName().equals(companyDetails.getName()) &&
                 companyRepository.existsByName(companyDetails.getName())) {
-            throw new DuplicateResourceException("Tên công ty đã tồn tại");
+            throw new DuplicateResourceException("Công ty", "name", companyDetails.getName());
         }
 
         company.setName(companyDetails.getName());

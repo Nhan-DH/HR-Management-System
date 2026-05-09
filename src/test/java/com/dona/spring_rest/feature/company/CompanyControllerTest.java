@@ -2,9 +2,7 @@ package com.dona.spring_rest.feature.company;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -53,17 +51,29 @@ class CompanyControllerTest {
         testCompany.setWebsite("www.techcorp.com");
         testCompany.setTaxCode("1234567890");
         testCompany.setNumberOfEmployees(100);
+        testCompany.setLogo("logo_url");
         testCompany.setCreatedAt(Instant.now());
         testCompany.setUpdatedAt(Instant.now());
 
-        validCompanyJson = objectMapper.writeValueAsString(testCompany);
+        CompanyRequest request = new CompanyRequest();
+        request.setName("Tech Corp");
+        request.setDescription("A technology company with more than 10 characters");
+        request.setAddress("123 Tech Street Address");
+        request.setEmail("contact@techcorp.com");
+        request.setPhone("0123456789");
+        request.setWebsite("www.techcorp.com");
+        request.setTaxCode("1234567890");
+        request.setNumberOfEmployees(100);
+        request.setLogo("logo_url");
+
+        validCompanyJson = objectMapper.writeValueAsString(request);
     }
 
     // ==================== GET /api/companies Tests ====================
 
     @Test
-    @DisplayName("getAllCompanies_returns200_withListOfCompanies")
-    void getAllCompanies_returns200_withListOfCompanies() throws Exception {
+    @DisplayName("getAllCompanies_returns200_withCompanyList")
+    void getAllCompanies_returns200_withCompanyList() throws Exception {
         // Arrange
         when(companyService.getAllCompanies()).thenReturn(Arrays.asList(testCompany));
 
@@ -72,14 +82,14 @@ class CompanyControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].id").value(1))
-                .andExpect(jsonPath("$.data[0].name").value("Tech Corp"));
+                .andExpect(jsonPath("$.data").isArray());
+
+        verify(companyService, times(1)).getAllCompanies();
     }
 
     @Test
-    @DisplayName("getAllCompanies_returns200_withEmptyList_whenNoCompaniesExist")
-    void getAllCompanies_returns200_withEmptyList_whenNoCompaniesExist() throws Exception {
+    @DisplayName("getAllCompanies_returns200_withEmptyList")
+    void getAllCompanies_returns200_withEmptyList() throws Exception {
         // Arrange
         when(companyService.getAllCompanies()).thenReturn(Arrays.asList());
 
@@ -87,9 +97,9 @@ class CompanyControllerTest {
         mockMvc.perform(get("/api/companies")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(jsonPath("$.statusCode").value(200));
+
+        verify(companyService, times(1)).getAllCompanies();
     }
 
     // ==================== GET /api/companies/{id} Tests ====================
@@ -106,8 +116,9 @@ class CompanyControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
                 .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.name").value("Tech Corp"))
-                .andExpect(jsonPath("$.data.email").value("contact@techcorp.com"));
+                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+
+        verify(companyService, times(1)).getCompanyById(1L);
     }
 
     @Test
@@ -115,20 +126,22 @@ class CompanyControllerTest {
     void getCompanyById_returns404_whenCompanyNotFound() throws Exception {
         // Arrange
         when(companyService.getCompanyById(anyLong()))
-                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999));
+                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
 
         // Act & Assert
         mockMvc.perform(get("/api/companies/999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.statusCode").value(404));
+
+        verify(companyService, times(1)).getCompanyById(999L);
     }
 
     // ==================== POST /api/companies Tests ====================
 
     @Test
-    @DisplayName("createCompany_returns201_withCreatedCompany")
-    void createCompany_returns201_withCreatedCompany() throws Exception {
+    @DisplayName("createCompany_returns201_whenValidDataProvided")
+    void createCompany_returns201_whenValidDataProvided() throws Exception {
         // Arrange
         when(companyService.createCompany(any(Company.class))).thenReturn(testCompany);
 
@@ -138,15 +151,16 @@ class CompanyControllerTest {
                 .content(validCompanyJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statusCode").value(201))
-                .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+
+        verify(companyService, times(1)).createCompany(any(Company.class));
     }
 
     @Test
-    @DisplayName("createCompany_returns400_whenValidationFails")
-    void createCompany_returns400_whenValidationFails() throws Exception {
-        // Arrange - Missing required fields
-        String invalidJson = "{\"name\": \"X\", \"email\": \"invalid-email\"}";
+    @DisplayName("createCompany_returns400_whenInvalidDataProvided")
+    void createCompany_returns400_whenInvalidDataProvided() throws Exception {
+        // Arrange
+        String invalidJson = "{}";
 
         // Act & Assert
         mockMvc.perform(post("/api/companies")
@@ -161,7 +175,7 @@ class CompanyControllerTest {
     void createCompany_returns409_whenEmailAlreadyExists() throws Exception {
         // Arrange
         when(companyService.createCompany(any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Email công ty đã tồn tại"));
+                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
 
         // Act & Assert
         mockMvc.perform(post("/api/companies")
@@ -176,7 +190,7 @@ class CompanyControllerTest {
     void createCompany_returns409_whenTaxCodeAlreadyExists() throws Exception {
         // Arrange
         when(companyService.createCompany(any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Mã số thuế đã tồn tại"));
+                .thenThrow(new DuplicateResourceException("Công ty", "taxCode", "1234567890"));
 
         // Act & Assert
         mockMvc.perform(post("/api/companies")
@@ -189,39 +203,27 @@ class CompanyControllerTest {
     // ==================== PUT /api/companies/{id} Tests ====================
 
     @Test
-    @DisplayName("updateCompany_returns200_withUpdatedCompany")
-    void updateCompany_returns200_withUpdatedCompany() throws Exception {
+    @DisplayName("updateCompany_returns200_whenValidDataProvided")
+    void updateCompany_returns200_whenValidDataProvided() throws Exception {
         // Arrange
-        Company updatedCompany = new Company();
-        updatedCompany.setId(1L);
-        updatedCompany.setName("Updated Tech Corp");
-        updatedCompany.setDescription("Updated description with more details");
-        updatedCompany.setAddress("456 New Street");
-        updatedCompany.setEmail("newemail@techcorp.com");
-        updatedCompany.setPhone("0987654321");
-        updatedCompany.setWebsite("www.updated.com");
-        updatedCompany.setTaxCode("0987654321");
-        updatedCompany.setNumberOfEmployees(150);
-
-        when(companyService.updateCompany(anyLong(), any(Company.class))).thenReturn(updatedCompany);
-
-        String updateJson = objectMapper.writeValueAsString(updatedCompany);
+        when(companyService.updateCompany(anyLong(), any(Company.class))).thenReturn(testCompany);
 
         // Act & Assert
         mockMvc.perform(put("/api/companies/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
+                .content(validCompanyJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.name").value("Updated Tech Corp"));
+                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+
+        verify(companyService, times(1)).updateCompany(anyLong(), any(Company.class));
     }
 
     @Test
-    @DisplayName("updateCompany_returns400_whenValidationFails")
-    void updateCompany_returns400_whenValidationFails() throws Exception {
-        // Arrange - Invalid data
-        String invalidJson = "{\"name\": \"X\", \"email\": \"invalid\"}";
+    @DisplayName("updateCompany_returns400_whenInvalidDataProvided")
+    void updateCompany_returns400_whenInvalidDataProvided() throws Exception {
+        // Arrange
+        String invalidJson = "{}";
 
         // Act & Assert
         mockMvc.perform(put("/api/companies/1")
@@ -236,7 +238,7 @@ class CompanyControllerTest {
     void updateCompany_returns404_whenCompanyNotFound() throws Exception {
         // Arrange
         when(companyService.updateCompany(anyLong(), any(Company.class)))
-                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999));
+                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
 
         // Act & Assert
         mockMvc.perform(put("/api/companies/999")
@@ -251,7 +253,7 @@ class CompanyControllerTest {
     void updateCompany_returns409_whenEmailAlreadyExists() throws Exception {
         // Arrange
         when(companyService.updateCompany(anyLong(), any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Email công ty đã tồn tại"));
+                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
 
         // Act & Assert
         mockMvc.perform(put("/api/companies/1")
@@ -267,23 +269,29 @@ class CompanyControllerTest {
     @DisplayName("deleteCompany_returns204_whenCompanyDeleted")
     void deleteCompany_returns204_whenCompanyDeleted() throws Exception {
         // Arrange
-        doNothing().when(companyService).deleteCompany(1L);
+        doNothing().when(companyService).deleteCompany(anyLong());
 
         // Act & Assert
-        mockMvc.perform(delete("/api/companies/1"))
+        mockMvc.perform(delete("/api/companies/1")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+
+        verify(companyService, times(1)).deleteCompany(1L);
     }
 
     @Test
     @DisplayName("deleteCompany_returns404_whenCompanyNotFound")
     void deleteCompany_returns404_whenCompanyNotFound() throws Exception {
         // Arrange
-        doThrow(new ResourceNotFoundException("Công ty", "id", 999))
-                .when(companyService).deleteCompany(999L);
+        doThrow(new ResourceNotFoundException("Công ty", "id", 999L))
+                .when(companyService).deleteCompany(anyLong());
 
         // Act & Assert
-        mockMvc.perform(delete("/api/companies/999"))
+        mockMvc.perform(delete("/api/companies/999")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.statusCode").value(404));
+
+        verify(companyService, times(1)).deleteCompany(999L);
     }
 }

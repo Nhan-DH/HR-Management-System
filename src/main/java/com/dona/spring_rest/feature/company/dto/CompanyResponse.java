@@ -21,8 +21,8 @@ public class CompanyResponse {
     }
 
     public CompanyResponse(Long id, String name, String description, String address, String email,
-                          String phone, String website, String taxCode, Integer numberOfEmployees,
-                          String logo, Instant createdAt, Instant updatedAt) {
+            String phone, String website, String taxCode, Integer numberOfEmployees,
+            String logo, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;

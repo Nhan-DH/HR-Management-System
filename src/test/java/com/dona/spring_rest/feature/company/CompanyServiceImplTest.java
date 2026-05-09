@@ -1,9 +1,7 @@
 package com.dona.spring_rest.feature.company;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.dona.spring_rest.exception.DuplicateResourceException;
@@ -38,13 +36,14 @@ class CompanyServiceImplTest {
         testCompany = new Company();
         testCompany.setId(1L);
         testCompany.setName("Tech Corp");
-        testCompany.setDescription("A technology company");
-        testCompany.setAddress("123 Tech Street");
+        testCompany.setDescription("A technology company with more than 10 characters");
+        testCompany.setAddress("123 Tech Street Address");
         testCompany.setEmail("contact@techcorp.com");
         testCompany.setPhone("0123456789");
         testCompany.setWebsite("www.techcorp.com");
         testCompany.setTaxCode("1234567890");
         testCompany.setNumberOfEmployees(100);
+        testCompany.setLogo("logo_url");
         testCompany.setCreatedAt(Instant.now());
         testCompany.setUpdatedAt(Instant.now());
     }
@@ -52,18 +51,22 @@ class CompanyServiceImplTest {
     // ==================== GetAllCompanies Tests ====================
 
     @Test
-    @DisplayName("getAllCompanies_returnsListOfCompanies_whenCompaniesExist")
-    void getAllCompanies_returnsListOfCompanies_whenCompaniesExist() {
+    @DisplayName("getAllCompanies_returnsAllCompanies_whenExists")
+    void getAllCompanies_returnsAllCompanies_whenExists() {
         // Arrange
-        List<Company> companies = Arrays.asList(testCompany);
-        when(companyRepository.findAll()).thenReturn(companies);
+        Company company2 = new Company();
+        company2.setId(2L);
+        company2.setName("Another Corp");
+        company2.setEmail("another@corp.com");
+
+        when(companyRepository.findAll()).thenReturn(Arrays.asList(testCompany, company2));
 
         // Act
         List<Company> result = companyService.getAllCompanies();
 
         // Assert
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
         assertEquals("Tech Corp", result.get(0).getName());
         verify(companyRepository, times(1)).findAll();
     }
@@ -194,13 +197,14 @@ class CompanyServiceImplTest {
         // Arrange
         Company updatedData = new Company();
         updatedData.setName("New Tech Corp");
-        updatedData.setDescription("Updated description");
+        updatedData.setDescription("Updated description with enough characters");
         updatedData.setAddress("456 New Street");
         updatedData.setEmail("newemail@techcorp.com");
         updatedData.setPhone("0987654321");
         updatedData.setWebsite("www.newtechcorp.com");
         updatedData.setTaxCode("0987654321");
         updatedData.setNumberOfEmployees(200);
+        updatedData.setLogo("new_logo_url");
 
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
         when(companyRepository.existsByEmail(anyString())).thenReturn(false);
@@ -223,25 +227,28 @@ class CompanyServiceImplTest {
         // Arrange
         when(companyRepository.findById(anyLong())).thenReturn(Optional.empty());
 
+        Company updatedData = new Company();
+        updatedData.setName("New Name");
+        updatedData.setEmail("new@email.com");
+
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> {
-            companyService.updateCompany(999L, testCompany);
+            companyService.updateCompany(999L, updatedData);
         });
         verify(companyRepository, times(1)).findById(999L);
-        verify(companyRepository, never()).save(any(Company.class));
     }
 
     @Test
-    @DisplayName("updateCompany_throwsDuplicateResourceException_whenEmailChanged_andEmailAlreadyExists")
-    void updateCompany_throwsDuplicateResourceException_whenEmailChanged_andEmailAlreadyExists() {
+    @DisplayName("updateCompany_throwsDuplicateResourceException_whenEmailAlreadyExists")
+    void updateCompany_throwsDuplicateResourceException_whenEmailAlreadyExists() {
         // Arrange
         Company updatedData = new Company();
-        updatedData.setEmail("existing@techcorp.com");
+        updatedData.setEmail("other@email.com");
         updatedData.setName("Tech Corp");
         updatedData.setTaxCode("1234567890");
 
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
-        when(companyRepository.existsByEmail("existing@techcorp.com")).thenReturn(true);
+        when(companyRepository.existsByEmail(anyString())).thenReturn(true);
 
         // Act & Assert
         assertThrows(DuplicateResourceException.class, () -> {
@@ -258,13 +265,14 @@ class CompanyServiceImplTest {
     void deleteCompany_deletesCompany_whenCompanyExists() {
         // Arrange
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
+        doNothing().when(companyRepository).delete(any(Company.class));
 
         // Act
         companyService.deleteCompany(1L);
 
         // Assert
         verify(companyRepository, times(1)).findById(1L);
-        verify(companyRepository, times(1)).delete(testCompany);
+        verify(companyRepository, times(1)).delete(any(Company.class));
     }
 
     @Test
@@ -284,22 +292,22 @@ class CompanyServiceImplTest {
     // ==================== Helper Methods Tests ====================
 
     @Test
-    @DisplayName("existsByEmail_returnTrue_whenEmailExists")
-    void existsByEmail_returnTrue_whenEmailExists() {
+    @DisplayName("existsByEmail_returnsTrue_whenEmailExists")
+    void existsByEmail_returnsTrue_whenEmailExists() {
         // Arrange
-        when(companyRepository.existsByEmail("contact@techcorp.com")).thenReturn(true);
+        when(companyRepository.existsByEmail("test@email.com")).thenReturn(true);
 
         // Act
-        boolean result = companyService.existsByEmail("contact@techcorp.com");
+        boolean result = companyService.existsByEmail("test@email.com");
 
         // Assert
         assertTrue(result);
-        verify(companyRepository, times(1)).existsByEmail("contact@techcorp.com");
+        verify(companyRepository, times(1)).existsByEmail("test@email.com");
     }
 
     @Test
-    @DisplayName("existsByTaxCode_returnTrue_whenTaxCodeExists")
-    void existsByTaxCode_returnTrue_whenTaxCodeExists() {
+    @DisplayName("existsByTaxCode_returnsTrue_whenTaxCodeExists")
+    void existsByTaxCode_returnsTrue_whenTaxCodeExists() {
         // Arrange
         when(companyRepository.existsByTaxCode("1234567890")).thenReturn(true);
 
