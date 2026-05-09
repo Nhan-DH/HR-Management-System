@@ -191,8 +191,8 @@ class PermissionServiceImplTest {
         when(permissionRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(ResourceNotFoundException.class, 
-            () -> permissionService.updatePermission(999L, testPermission));
+        assertThrows(ResourceNotFoundException.class,
+                () -> permissionService.updatePermission(999L, testPermission));
         verify(permissionRepository, times(1)).findById(999L);
     }
 
@@ -211,7 +211,7 @@ class PermissionServiceImplTest {
 
         // Act & Assert
         assertThrows(DuplicateResourceException.class,
-            () -> permissionService.updatePermission(1L, updateData));
+                () -> permissionService.updatePermission(1L, updateData));
         verify(permissionRepository, times(1)).findById(1L);
         verify(permissionRepository, never()).save(any());
     }

@@ -47,7 +47,7 @@ class PermissionControllerTest {
     void setUp() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         objectMapper = new ObjectMapper();
-        
+
         // Create a real service with mocked repository
         permissionService = new PermissionServiceImpl(permissionRepository);
 
@@ -61,18 +61,16 @@ class PermissionControllerTest {
         testPermission.setUpdatedAt(Instant.now());
 
         validRequest = new CreatePermissionRequest(
-            "CREATE_USER",
-            "/api/v1/users",
-            "POST",
-            "USER"
-        );
+                "CREATE_USER",
+                "/api/v1/users",
+                "POST",
+                "USER");
 
         validUpdateRequest = new UpdatePermissionRequest(
-            "UPDATE_USER",
-            "/api/v1/users",
-            "PUT",
-            "USER"
-        );
+                "UPDATE_USER",
+                "/api/v1/users",
+                "PUT",
+                "USER");
     }
 
     // ==================== GET /api/v1/permissions Tests ====================
@@ -85,10 +83,10 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/permissions"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.statusCode").value(200))
-            .andExpect(jsonPath("$.data[0].id").value(1))
-            .andExpect(jsonPath("$.data[0].name").value("CREATE_USER"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("CREATE_USER"));
 
         verify(permissionRepository, times(1)).findAll();
     }
@@ -101,9 +99,9 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/permissions"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.statusCode").value(200))
-            .andExpect(jsonPath("$.data.length()").value(0));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(permissionRepository, times(1)).findAll();
     }
@@ -118,10 +116,10 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/permissions/1"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.statusCode").value(200))
-            .andExpect(jsonPath("$.data.id").value(1))
-            .andExpect(jsonPath("$.data.name").value("CREATE_USER"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("CREATE_USER"));
 
         verify(permissionRepository, times(1)).findById(1L);
     }
@@ -134,8 +132,8 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/v1/permissions/999"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.statusCode").value(404));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404));
 
         verify(permissionRepository, times(1)).findById(999L);
     }
@@ -154,10 +152,10 @@ class PermissionControllerTest {
         mockMvc.perform(post("/api/v1/permissions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.statusCode").value(201))
-            .andExpect(jsonPath("$.data.id").value(1))
-            .andExpect(jsonPath("$.data.name").value("CREATE_USER"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statusCode").value(201))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("CREATE_USER"));
 
         verify(permissionRepository, times(1)).existsByName("CREATE_USER");
         verify(permissionRepository, times(1)).existsByApiPathAndMethod("/api/v1/users", "POST");
@@ -169,18 +167,17 @@ class PermissionControllerTest {
     void testCreatePermissionBadRequest() throws Exception {
         // Arrange
         CreatePermissionRequest invalidRequest = new CreatePermissionRequest(
-            "",  // Invalid: empty name
-            "/api/v1/users",
-            "POST",
-            "USER"
-        );
+                "", // Invalid: empty name
+                "/api/v1/users",
+                "POST",
+                "USER");
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/permissions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.statusCode").value(400));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400));
 
         verify(permissionRepository, never()).save(any());
     }
@@ -195,8 +192,8 @@ class PermissionControllerTest {
         mockMvc.perform(post("/api/v1/permissions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.statusCode").value(409));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(409));
 
         verify(permissionRepository, times(1)).existsByName("CREATE_USER");
         verify(permissionRepository, never()).save(any());
@@ -213,8 +210,8 @@ class PermissionControllerTest {
         mockMvc.perform(post("/api/v1/permissions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.statusCode").value(409));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(409));
 
         verify(permissionRepository, times(1)).existsByName("CREATE_USER");
         verify(permissionRepository, times(1)).existsByApiPathAndMethod("/api/v1/users", "POST");
@@ -243,9 +240,9 @@ class PermissionControllerTest {
         mockMvc.perform(put("/api/v1/permissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validUpdateRequest)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.statusCode").value(200))
-            .andExpect(jsonPath("$.data.name").value("UPDATE_USER"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.name").value("UPDATE_USER"));
 
         verify(permissionRepository, times(1)).findById(1L);
         verify(permissionRepository, times(1)).existsByName("UPDATE_USER");
@@ -256,18 +253,17 @@ class PermissionControllerTest {
     void testUpdatePermissionBadRequest() throws Exception {
         // Arrange
         UpdatePermissionRequest invalidRequest = new UpdatePermissionRequest(
-            "",  // Invalid: empty name
-            "/api/v1/users",
-            "PUT",
-            "USER"
-        );
+                "", // Invalid: empty name
+                "/api/v1/users",
+                "PUT",
+                "USER");
 
         // Act & Assert
         mockMvc.perform(put("/api/v1/permissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.statusCode").value(400));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400));
 
         verify(permissionRepository, never()).save(any());
     }
@@ -282,8 +278,8 @@ class PermissionControllerTest {
         mockMvc.perform(put("/api/v1/permissions/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validUpdateRequest)))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.statusCode").value(404));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404));
 
         verify(permissionRepository, times(1)).findById(999L);
         verify(permissionRepository, never()).save(any());
@@ -300,14 +296,15 @@ class PermissionControllerTest {
         mockMvc.perform(put("/api/v1/permissions/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validUpdateRequest)))
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.statusCode").value(409));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(409));
 
         verify(permissionRepository, times(1)).findById(1L);
         verify(permissionRepository, never()).save(any());
     }
 
-    // ==================== DELETE /api/v1/permissions/{id} Tests ====================
+    // ==================== DELETE /api/v1/permissions/{id} Tests
+    // ====================
 
     @Test
     @DisplayName("DELETE /api/v1/permissions/{id} returns 204 when deleted successfully")
@@ -317,7 +314,7 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/v1/permissions/1"))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         verify(permissionRepository, times(1)).findById(1L);
         verify(permissionRepository, times(1)).delete(testPermission);
@@ -331,8 +328,8 @@ class PermissionControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/v1/permissions/999"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.statusCode").value(404));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404));
 
         verify(permissionRepository, times(1)).findById(999L);
         verify(permissionRepository, never()).delete(any());
