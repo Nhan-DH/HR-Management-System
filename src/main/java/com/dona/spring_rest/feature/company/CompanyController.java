@@ -18,7 +18,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/companies")
+@RequestMapping("/api/v1/companies")
 public class CompanyController {
 
     private final CompanyService companyService;
