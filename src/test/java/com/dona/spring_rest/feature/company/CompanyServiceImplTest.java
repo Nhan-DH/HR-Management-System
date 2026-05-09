@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CompanyServiceImpl Tests")
+@DisplayName("CompanyService Unit Tests")
 class CompanyServiceImplTest {
 
     @Mock
@@ -51,8 +51,8 @@ class CompanyServiceImplTest {
     // ==================== GetAllCompanies Tests ====================
 
     @Test
-    @DisplayName("getAllCompanies_returnsAllCompanies_whenExists")
-    void getAllCompanies_returnsAllCompanies_whenExists() {
+    @DisplayName("getAllCompanies returns all companies when they exist")
+    void testGetAllCompaniesSuccess() {
         // Arrange
         Company company2 = new Company();
         company2.setId(2L);
@@ -72,8 +72,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("getAllCompanies_returnsEmptyList_whenNoCompaniesExist")
-    void getAllCompanies_returnsEmptyList_whenNoCompaniesExist() {
+    @DisplayName("getAllCompanies returns empty list when no companies exist")
+    void testGetAllCompaniesEmpty() {
         // Arrange
         when(companyRepository.findAll()).thenReturn(Arrays.asList());
 
@@ -89,8 +89,8 @@ class CompanyServiceImplTest {
     // ==================== GetCompanyById Tests ====================
 
     @Test
-    @DisplayName("getCompanyById_returnsCompany_whenCompanyExists")
-    void getCompanyById_returnsCompany_whenCompanyExists() {
+    @DisplayName("getCompanyById returns company when it exists")
+    void testGetCompanyByIdSuccess() {
         // Arrange
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
 
@@ -105,8 +105,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("getCompanyById_throwsResourceNotFoundException_whenCompanyNotFound")
-    void getCompanyById_throwsResourceNotFoundException_whenCompanyNotFound() {
+    @DisplayName("getCompanyById throws ResourceNotFoundException when company not found")
+    void testGetCompanyByIdNotFound() {
         // Arrange
         when(companyRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -120,8 +120,8 @@ class CompanyServiceImplTest {
     // ==================== CreateCompany Tests ====================
 
     @Test
-    @DisplayName("createCompany_createsCompany_whenValidDataProvided")
-    void createCompany_createsCompany_whenValidDataProvided() {
+    @DisplayName("createCompany successfully creates a company with valid data")
+    void testCreateCompanySuccess() {
         // Arrange
         when(companyRepository.existsByEmail(anyString())).thenReturn(false);
         when(companyRepository.existsByTaxCode(anyString())).thenReturn(false);
@@ -142,8 +142,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("createCompany_throwsDuplicateResourceException_whenEmailAlreadyExists")
-    void createCompany_throwsDuplicateResourceException_whenEmailAlreadyExists() {
+    @DisplayName("createCompany throws DuplicateResourceException when email already exists")
+    void testCreateCompanyDuplicateEmail() {
         // Arrange
         when(companyRepository.existsByEmail(anyString())).thenReturn(true);
 
@@ -156,8 +156,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("createCompany_throwsDuplicateResourceException_whenTaxCodeAlreadyExists")
-    void createCompany_throwsDuplicateResourceException_whenTaxCodeAlreadyExists() {
+    @DisplayName("createCompany throws DuplicateResourceException when tax code already exists")
+    void testCreateCompanyDuplicateTaxCode() {
         // Arrange
         when(companyRepository.existsByEmail(anyString())).thenReturn(false);
         when(companyRepository.existsByTaxCode(anyString())).thenReturn(true);
@@ -172,8 +172,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("createCompany_throwsDuplicateResourceException_whenNameAlreadyExists")
-    void createCompany_throwsDuplicateResourceException_whenNameAlreadyExists() {
+    @DisplayName("createCompany throws DuplicateResourceException when name already exists")
+    void testCreateCompanyDuplicateName() {
         // Arrange
         when(companyRepository.existsByEmail(anyString())).thenReturn(false);
         when(companyRepository.existsByTaxCode(anyString())).thenReturn(false);
@@ -192,8 +192,8 @@ class CompanyServiceImplTest {
     // ==================== UpdateCompany Tests ====================
 
     @Test
-    @DisplayName("updateCompany_updatesCompany_whenValidDataProvided")
-    void updateCompany_updatesCompany_whenValidDataProvided() {
+    @DisplayName("updateCompany successfully updates a company with valid data")
+    void testUpdateCompanySuccess() {
         // Arrange
         Company updatedData = new Company();
         updatedData.setName("New Tech Corp");
@@ -222,8 +222,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("updateCompany_throwsResourceNotFoundException_whenCompanyNotFound")
-    void updateCompany_throwsResourceNotFoundException_whenCompanyNotFound() {
+    @DisplayName("updateCompany throws ResourceNotFoundException when company not found")
+    void testUpdateCompanyNotFound() {
         // Arrange
         when(companyRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -239,8 +239,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("updateCompany_throwsDuplicateResourceException_whenEmailAlreadyExists")
-    void updateCompany_throwsDuplicateResourceException_whenEmailAlreadyExists() {
+    @DisplayName("updateCompany throws DuplicateResourceException when email already exists")
+    void testUpdateCompanyDuplicateEmail() {
         // Arrange
         Company updatedData = new Company();
         updatedData.setEmail("other@email.com");
@@ -261,8 +261,8 @@ class CompanyServiceImplTest {
     // ==================== DeleteCompany Tests ====================
 
     @Test
-    @DisplayName("deleteCompany_deletesCompany_whenCompanyExists")
-    void deleteCompany_deletesCompany_whenCompanyExists() {
+    @DisplayName("deleteCompany successfully deletes a company")
+    void testDeleteCompanySuccess() {
         // Arrange
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
         doNothing().when(companyRepository).delete(any(Company.class));
@@ -276,8 +276,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("deleteCompany_throwsResourceNotFoundException_whenCompanyNotFound")
-    void deleteCompany_throwsResourceNotFoundException_whenCompanyNotFound() {
+    @DisplayName("deleteCompany throws ResourceNotFoundException when company not found")
+    void testDeleteCompanyNotFound() {
         // Arrange
         when(companyRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -292,8 +292,8 @@ class CompanyServiceImplTest {
     // ==================== Helper Methods Tests ====================
 
     @Test
-    @DisplayName("existsByEmail_returnsTrue_whenEmailExists")
-    void existsByEmail_returnsTrue_whenEmailExists() {
+    @DisplayName("existsByEmail returns true when email exists")
+    void testExistsByEmailTrue() {
         // Arrange
         when(companyRepository.existsByEmail("test@email.com")).thenReturn(true);
 
@@ -306,8 +306,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    @DisplayName("existsByTaxCode_returnsTrue_whenTaxCodeExists")
-    void existsByTaxCode_returnsTrue_whenTaxCodeExists() {
+    @DisplayName("existsByTaxCode returns true when tax code exists")
+    void testExistsByTaxCodeTrue() {
         // Arrange
         when(companyRepository.existsByTaxCode("1234567890")).thenReturn(true);
 
