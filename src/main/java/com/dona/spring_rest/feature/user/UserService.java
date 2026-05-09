@@ -8,9 +8,13 @@ public interface UserService {
 
     User getUserById(Long id);
 
-    User createUser(User user);
+    User createUser(User user, List<Long> roleIds);
 
-    User updateUser(Long id, User user);
+    User updateUser(Long id, User user, List<Long> roleIds);
 
     void deleteUser(Long id);
+
+    boolean existsByEmail(String email);
+
+    User getUserByEmail(String email);
 }
