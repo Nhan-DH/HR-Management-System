@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dona.spring_rest.dto.ApiResponse;
+import com.dona.spring_rest.feature.company.dto.CompanyRequest;
+import com.dona.spring_rest.feature.company.dto.CompanyResponse;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/companies")
@@ -28,30 +31,35 @@ public class CompanyController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Company>>> getAllCompanies() {
+    public ResponseEntity<ApiResponse<List<CompanyResponse>>> getAllCompanies() {
         List<Company> companies = companyService.getAllCompanies();
-        return ResponseEntity.ok(ApiResponse.success(companies));
+        List<CompanyResponse> responses = companies.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Company>> getCompanyById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(@PathVariable Long id) {
         Company company = companyService.getCompanyById(id);
-        return ResponseEntity.ok(ApiResponse.success(company));
+        return ResponseEntity.ok(ApiResponse.success(mapToResponse(company)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Company>> createCompany(@Valid @RequestBody Company company) {
+    public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(@Valid @RequestBody CompanyRequest request) {
+        Company company = mapToEntity(request);
         Company createdCompany = companyService.createCompany(company);
         return ResponseEntity.created(URI.create("/api/companies/" + createdCompany.getId()))
-                .body(ApiResponse.success(createdCompany));
+                .body(ApiResponse.success(mapToResponse(createdCompany)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Company>> updateCompany(
+    public ResponseEntity<ApiResponse<CompanyResponse>> updateCompany(
             @PathVariable Long id,
-            @Valid @RequestBody Company companyDetails) {
+            @Valid @RequestBody CompanyRequest request) {
+        Company companyDetails = mapToEntity(request);
         Company updatedCompany = companyService.updateCompany(id, companyDetails);
-        return ResponseEntity.ok(ApiResponse.success(updatedCompany));
+        return ResponseEntity.ok(ApiResponse.success(mapToResponse(updatedCompany)));
     }
 
     @DeleteMapping("/{id}")
@@ -59,5 +67,35 @@ public class CompanyController {
         companyService.deleteCompany(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(ApiResponse.success(null));
+    }
+
+    private CompanyResponse mapToResponse(Company company) {
+        return new CompanyResponse(
+                company.getId(),
+                company.getName(),
+                company.getDescription(),
+                company.getAddress(),
+                company.getEmail(),
+                company.getPhone(),
+                company.getWebsite(),
+                company.getTaxCode(),
+                company.getNumberOfEmployees(),
+                company.getLogo(),
+                company.getCreatedAt(),
+                company.getUpdatedAt());
+    }
+
+    private Company mapToEntity(CompanyRequest request) {
+        Company company = new Company();
+        company.setName(request.getName());
+        company.setDescription(request.getDescription());
+        company.setAddress(request.getAddress());
+        company.setEmail(request.getEmail());
+        company.setPhone(request.getPhone());
+        company.setWebsite(request.getWebsite());
+        company.setTaxCode(request.getTaxCode());
+        company.setNumberOfEmployees(request.getNumberOfEmployees());
+        company.setLogo(request.getLogo());
+        return company;
     }
 }

@@ -1,6 +1,8 @@
 package com.dona.spring_rest.feature.company.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -35,7 +37,8 @@ public class CompanyRequest {
     @Size(max = 50, message = "Mã số thuế không được quá 50 ký tự")
     private String taxCode;
 
-    @Size(max = 50, message = "Số nhân viên không hợp lệ")
+    @Max(value = 5000, message = "Số nhân viên không được vượt quá 5000")
+    @Min(value = 1, message = "Số nhân viên phải từ 1 trở lên")
     private Integer numberOfEmployees;
 
     private String logo;

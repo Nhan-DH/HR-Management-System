@@ -1,17 +1,24 @@
 package com.dona.spring_rest.feature.company;
 
+import com.dona.spring_rest.feature.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "companies")
@@ -52,11 +59,16 @@ public class Company {
     @Size(max = 50, message = "Mã số thuế không được quá 50 ký tự")
     private String taxCode;
 
-    @Size(max = 50, message = "Số nhân viên không hợp lệ")
+    @Max(value = 5000, message = "Số nhân viên không được vượt quá 5000")
+    @Min(value = 1, message = "Số nhân viên không hợp lệ")
     private Integer numberOfEmployees;
 
     @Column(columnDefinition = "LONGTEXT")
     private String logo;
+
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<User> users;
 
     private Instant createdAt;
     private Instant updatedAt;
@@ -161,5 +173,13 @@ public class Company {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
     }
 }

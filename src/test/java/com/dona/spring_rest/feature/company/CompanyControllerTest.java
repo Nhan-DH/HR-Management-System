@@ -13,15 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -36,288 +34,277 @@ class CompanyControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
-    @Autowired
+    @MockitoBean
     private CompanyService companyService;
 
-    private Company testCompany;
-    private CompanyRequest validRequest;
+        @BeforeEach
+        void setUp() throws Exception {
+                mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+                objectMapper = new ObjectMapper();
+                testCompany = new Company();
+                testCompany.setId(1L);
+                testCompany.setName("Tech Corp");
+                testCompany.setDescription("A technology company with more than 10 characters");
+                testCompany.setAddress("123 Tech Street Address");
+                testCompany.setEmail("contact@techcorp.com");
+                testCompany.setPhone("0123456789");
+                testCompany.setWebsite("www.techcorp.com");
+                testCompany.setTaxCode("1234567890");
+                testCompany.setNumberOfEmployees(100);
+                testCompany.setLogo("logo_url");
+                testCompany.setCreatedAt(Instant.now());
+                testCompany.setUpdatedAt(Instant.now());
 
-    @Configuration
-    static class TestConfig {
-        @Bean
-        public CompanyService mockCompanyService() {
-            return Mockito.mock(CompanyService.class);
+                validRequest = new CompanyRequest();
+                validRequest.setName("Tech Corp");
+                validRequest.setDescription("A technology company with more than 10 characters");
+                validRequest.setAddress("123 Tech Street Address");
+                validRequest.setEmail("contact@techcorp.com");
+                validRequest.setPhone("0123456789");
+                validRequest.setWebsite("www.techcorp.com");
+                validRequest.setTaxCode("1234567890");
+                validRequest.setNumberOfEmployees(100);
+                validRequest.setLogo("logo_url");
         }
-    }
 
-    @BeforeEach
-    void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        objectMapper = new ObjectMapper();
-        testCompany = new Company();
-        testCompany.setId(1L);
-        testCompany.setName("Tech Corp");
-        testCompany.setDescription("A technology company with more than 10 characters");
-        testCompany.setAddress("123 Tech Street Address");
-        testCompany.setEmail("contact@techcorp.com");
-        testCompany.setPhone("0123456789");
-        testCompany.setWebsite("www.techcorp.com");
-        testCompany.setTaxCode("1234567890");
-        testCompany.setNumberOfEmployees(100);
-        testCompany.setLogo("logo_url");
-        testCompany.setCreatedAt(Instant.now());
-        testCompany.setUpdatedAt(Instant.now());
+        // ==================== GET /api/companies Tests ====================
 
-        validRequest = new CompanyRequest();
-        validRequest.setName("Tech Corp");
-        validRequest.setDescription("A technology company with more than 10 characters");
-        validRequest.setAddress("123 Tech Street Address");
-        validRequest.setEmail("contact@techcorp.com");
-        validRequest.setPhone("0123456789");
-        validRequest.setWebsite("www.techcorp.com");
-        validRequest.setTaxCode("1234567890");
-        validRequest.setNumberOfEmployees(100);
-        validRequest.setLogo("logo_url");
-    }
+        @Test
+        @DisplayName("GET /api/v1/companies returns 200 with company list")
+        void testGetAllCompaniesSuccess() throws Exception {
+                // Arrange
+                when(companyService.getAllCompanies()).thenReturn(Arrays.asList(testCompany));
 
-    // ==================== GET /api/companies Tests ====================
+                // Act & Assert
+                mockMvc.perform(get("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.statusCode").value(200))
+                                .andExpect(jsonPath("$.data").isArray());
 
-    @Test
-    @DisplayName("GET /api/companies returns 200 with company list")
-    void testGetAllCompaniesSuccess() throws Exception {
-        // Arrange
-        when(companyService.getAllCompanies()).thenReturn(Arrays.asList(testCompany));
+                verify(companyService, times(1)).getAllCompanies();
+        }
 
-        // Act & Assert
-        mockMvc.perform(get("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data").isArray());
+        @Test
+        @DisplayName("GET /api/v1/companies returns 200 with empty list when no companies exist")
+        void testGetAllCompaniesEmpty() throws Exception {
+                // Arrange
+                when(companyService.getAllCompanies()).thenReturn(Arrays.asList());
 
-        verify(companyService, times(1)).getAllCompanies();
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.statusCode").value(200));
 
-    @Test
-    @DisplayName("GET /api/companies returns 200 with empty list when no companies exist")
-    void testGetAllCompaniesEmpty() throws Exception {
-        // Arrange
-        when(companyService.getAllCompanies()).thenReturn(Arrays.asList());
+                verify(companyService, times(1)).getAllCompanies();
+        }
 
-        // Act & Assert
-        mockMvc.perform(get("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statusCode").value(200));
+        // ==================== GET /api/companies/{id} Tests ====================
 
-        verify(companyService, times(1)).getAllCompanies();
-    }
+        @Test
+        @DisplayName("GET /api/v1/companies/{id} returns 200 with company data")
+        void testGetCompanyByIdSuccess() throws Exception {
+                // Arrange
+                when(companyService.getCompanyById(1L)).thenReturn(testCompany);
 
-    // ==================== GET /api/companies/{id} Tests ====================
+                // Act & Assert
+                mockMvc.perform(get("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.statusCode").value(200))
+                                .andExpect(jsonPath("$.data.id").value(1))
+                                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
 
-    @Test
-    @DisplayName("GET /api/companies/{id} returns 200 with company data")
-    void testGetCompanyByIdSuccess() throws Exception {
-        // Arrange
-        when(companyService.getCompanyById(1L)).thenReturn(testCompany);
+                verify(companyService, times(1)).getCompanyById(1L);
+        }
 
-        // Act & Assert
-        mockMvc.perform(get("/api/companies/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+        @Test
+        @DisplayName("GET /api/v1/companies/{id} returns 404 when company not found")
+        void testGetCompanyByIdNotFound() throws Exception {
+                // Arrange
+                when(companyService.getCompanyById(anyLong()))
+                                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
 
-        verify(companyService, times(1)).getCompanyById(1L);
-    }
+                // Act & Assert
+                mockMvc.perform(get("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.statusCode").value(404));
 
-    @Test
-    @DisplayName("GET /api/companies/{id} returns 404 when company not found")
-    void testGetCompanyByIdNotFound() throws Exception {
-        // Arrange
-        when(companyService.getCompanyById(anyLong()))
-                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
+                verify(companyService, times(1)).getCompanyById(999L);
+        }
 
-        // Act & Assert
-        mockMvc.perform(get("/api/companies/999")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.statusCode").value(404));
+        // ==================== POST /api/companies Tests ====================
 
-        verify(companyService, times(1)).getCompanyById(999L);
-    }
+        @Test
+        @DisplayName("POST /api/v1/companies returns 201 when company is created successfully")
+        void testCreateCompanySuccess() throws Exception {
+                // Arrange
+                when(companyService.createCompany(any(Company.class))).thenReturn(testCompany);
 
-    // ==================== POST /api/companies Tests ====================
+                // Act & Assert
+                mockMvc.perform(post("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.statusCode").value(201))
+                                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
 
-    @Test
-    @DisplayName("POST /api/companies returns 201 when company is created successfully")
-    void testCreateCompanySuccess() throws Exception {
-        // Arrange
-        when(companyService.createCompany(any(Company.class))).thenReturn(testCompany);
+                verify(companyService, times(1)).createCompany(any(Company.class));
+        }
 
-        // Act & Assert
-        mockMvc.perform(post("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.statusCode").value(201))
-                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+        @Test
+        @DisplayName("POST /api/v1/companies returns 400 when invalid data is provided")
+        void testCreateCompanyBadRequest() throws Exception {
+                // Arrange
+                String invalidJson = "{}";
 
-        verify(companyService, times(1)).createCompany(any(Company.class));
-    }
+                // Act & Assert
+                mockMvc.perform(post("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.statusCode").value(400));
+        }
 
-    @Test
-    @DisplayName("POST /api/companies returns 400 when invalid data is provided")
-    void testCreateCompanyBadRequest() throws Exception {
-        // Arrange
-        String invalidJson = "{}";
+        @Test
+        @DisplayName("POST /api/v1/companies returns 409 when email already exists")
+        void testCreateCompanyDuplicateEmail() throws Exception {
+                // Arrange
+                when(companyService.createCompany(any(Company.class)))
+                                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400));
-    }
+                // Act & Assert
+                mockMvc.perform(post("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.statusCode").value(409));
+        }
 
-    @Test
-    @DisplayName("POST /api/companies returns 409 when email already exists")
-    void testCreateCompanyDuplicateEmail() throws Exception {
-        // Arrange
-        when(companyService.createCompany(any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
+        @Test
+        @DisplayName("POST /api/v1/companies returns 409 when tax code already exists")
+        void testCreateCompanyDuplicateTaxCode() throws Exception {
+                // Arrange
+                when(companyService.createCompany(any(Company.class)))
+                                .thenThrow(new DuplicateResourceException("Công ty", "taxCode", "1234567890"));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.statusCode").value(409));
-    }
+                // Act & Assert
+                mockMvc.perform(post("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.statusCode").value(409));
+        }
 
-    @Test
-    @DisplayName("POST /api/companies returns 409 when tax code already exists")
-    void testCreateCompanyDuplicateTaxCode() throws Exception {
-        // Arrange
-        when(companyService.createCompany(any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Công ty", "taxCode", "1234567890"));
+        @Test
+        @DisplayName("POST /api/v1/companies returns 409 when company name already exists")
+        void testCreateCompanyDuplicateName() throws Exception {
+                // Arrange
+                when(companyService.createCompany(any(Company.class)))
+                                .thenThrow(new DuplicateResourceException("Công ty", "name", "Tech Corp"));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.statusCode").value(409));
-    }
+                // Act & Assert
+                mockMvc.perform(post("/api/v1/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.statusCode").value(409));
+        }
 
-    @Test
-    @DisplayName("POST /api/companies returns 409 when company name already exists")
-    void testCreateCompanyDuplicateName() throws Exception {
-        // Arrange
-        when(companyService.createCompany(any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Công ty", "name", "Tech Corp"));
+        // ==================== PUT /api/companies/{id} Tests ====================
 
-        // Act & Assert
-        mockMvc.perform(post("/api/companies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.statusCode").value(409));
-    }
+        @Test
+        @DisplayName("PUT /api/v1/companies/{id} returns 200 when company is updated successfully")
+        void testUpdateCompanySuccess() throws Exception {
+                // Arrange
+                when(companyService.updateCompany(anyLong(), any(Company.class))).thenReturn(testCompany);
 
-    // ==================== PUT /api/companies/{id} Tests ====================
+                // Act & Assert
+                mockMvc.perform(put("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.statusCode").value(200))
+                                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
 
-    @Test
-    @DisplayName("PUT /api/companies/{id} returns 200 when company is updated successfully")
-    void testUpdateCompanySuccess() throws Exception {
-        // Arrange
-        when(companyService.updateCompany(anyLong(), any(Company.class))).thenReturn(testCompany);
+                verify(companyService, times(1)).updateCompany(anyLong(), any(Company.class));
+        }
 
-        // Act & Assert
-        mockMvc.perform(put("/api/companies/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data.name").value("Tech Corp"));
+        @Test
+        @DisplayName("PUT /api/v1/companies/{id} returns 400 when invalid data is provided")
+        void testUpdateCompanyBadRequest() throws Exception {
+                // Arrange
+                String invalidJson = "{}";
 
-        verify(companyService, times(1)).updateCompany(anyLong(), any(Company.class));
-    }
+                // Act & Assert
+                mockMvc.perform(put("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.statusCode").value(400));
+        }
 
-    @Test
-    @DisplayName("PUT /api/companies/{id} returns 400 when invalid data is provided")
-    void testUpdateCompanyBadRequest() throws Exception {
-        // Arrange
-        String invalidJson = "{}";
+        @Test
+        @DisplayName("PUT /api/v1/companies/{id} returns 404 when company not found")
+        void testUpdateCompanyNotFound() throws Exception {
+                // Arrange
+                when(companyService.updateCompany(anyLong(), any(Company.class)))
+                                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
 
-        // Act & Assert
-        mockMvc.perform(put("/api/companies/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400));
-    }
+                // Act & Assert
+                mockMvc.perform(put("/api/v1/companies/999")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.statusCode").value(404));
+        }
 
-    @Test
-    @DisplayName("PUT /api/companies/{id} returns 404 when company not found")
-    void testUpdateCompanyNotFound() throws Exception {
-        // Arrange
-        when(companyService.updateCompany(anyLong(), any(Company.class)))
-                .thenThrow(new ResourceNotFoundException("Công ty", "id", 999L));
+        @Test
+        @DisplayName("PUT /api/v1/companies/{id} returns 409 when email already exists")
+        void testUpdateCompanyDuplicateEmail() throws Exception {
+                // Arrange
+                when(companyService.updateCompany(anyLong(), any(Company.class)))
+                                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
 
-        // Act & Assert
-        mockMvc.perform(put("/api/companies/999")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.statusCode").value(404));
-    }
+                // Act & Assert
+                mockMvc.perform(put("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(validRequest)))
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.statusCode").value(409));
+        }
 
-    @Test
-    @DisplayName("PUT /api/companies/{id} returns 409 when email already exists")
-    void testUpdateCompanyDuplicateEmail() throws Exception {
-        // Arrange
-        when(companyService.updateCompany(anyLong(), any(Company.class)))
-                .thenThrow(new DuplicateResourceException("Công ty", "email", "contact@techcorp.com"));
+        // ==================== DELETE /api/companies/{id} Tests ====================
 
-        // Act & Assert
-        mockMvc.perform(put("/api/companies/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.statusCode").value(409));
-    }
+        @Test
+        @DisplayName("DELETE /api/v1/companies/{id} returns 204 when company is deleted successfully")
+        void testDeleteCompanySuccess() throws Exception {
+                // Arrange
+                doNothing().when(companyService).deleteCompany(anyLong());
 
-    // ==================== DELETE /api/companies/{id} Tests ====================
+                // Act & Assert
+                mockMvc.perform(delete("/api/v1/companies/1")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isNoContent());
 
-    @Test
-    @DisplayName("DELETE /api/companies/{id} returns 204 when company is deleted successfully")
-    void testDeleteCompanySuccess() throws Exception {
-        // Arrange
-        doNothing().when(companyService).deleteCompany(anyLong());
+                verify(companyService, times(1)).deleteCompany(1L);
+        }
 
-        // Act & Assert
-        mockMvc.perform(delete("/api/companies/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+        @Test
+        @DisplayName("DELETE /api/v1/companies/{id} returns 404 when company not found")
+        void testDeleteCompanyNotFound() throws Exception {
+                // Arrange
+                doThrow(new ResourceNotFoundException("Công ty", "id", 999L))
+                                .when(companyService).deleteCompany(anyLong());
 
-        verify(companyService, times(1)).deleteCompany(1L);
-    }
+                // Act & Assert
+                mockMvc.perform(delete("/api/v1/companies/999")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.statusCode").value(404));
 
-    @Test
-    @DisplayName("DELETE /api/companies/{id} returns 404 when company not found")
-    void testDeleteCompanyNotFound() throws Exception {
-        // Arrange
-        doThrow(new ResourceNotFoundException("Công ty", "id", 999L))
-                .when(companyService).deleteCompany(anyLong());
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/companies/999")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.statusCode").value(404));
-
-        verify(companyService, times(1)).deleteCompany(999L);
-    }
+                verify(companyService, times(1)).deleteCompany(999L);
+        }
 }
