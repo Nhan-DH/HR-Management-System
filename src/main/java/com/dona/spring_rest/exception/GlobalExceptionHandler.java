@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +18,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.dona.spring_rest.dto.ApiResponse;
+import com.dona.spring_rest.feature.file.FileUploadException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -39,6 +41,13 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.conflict(ex.getMessage()));
         }
 
+        @ExceptionHandler(FileUploadException.class)
+        public ResponseEntity<ApiResponse<Void>> handleFileUpload(FileUploadException ex) {
+                log.warn("FileUploadException: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(ApiResponse.badRequest(ex.getMessage()));
+        }
+
         // ========== SPRING MVC EXCEPTIONS ==========
 
         @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -57,6 +66,15 @@ public class GlobalExceptionHandler {
                 log.warn("HttpMessageNotReadableException: {}", ex.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(ApiResponse.badRequest("Request body không hợp lệ hoặc bị thiếu"));
+        }
+
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+                log.warn("MaxUploadSizeExceededException: {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                                .body(ApiResponse.ofError(HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                                                "File vượt quá kích thước cho phép",
+                                                "Payload Too Large"));
         }
 
         @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

@@ -28,14 +28,17 @@ import java.util.Arrays;
 @DisplayName("CompanyController Integration Tests")
 class CompanyControllerTest {
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+        @Autowired
+        private WebApplicationContext webApplicationContext;
 
-    private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
+        private MockMvc mockMvc;
+        private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private CompanyService companyService;
+        @MockitoBean
+        private CompanyService companyService;
+
+        private Company testCompany;
+        private CompanyRequest validRequest;
 
         @BeforeEach
         void setUp() throws Exception {
